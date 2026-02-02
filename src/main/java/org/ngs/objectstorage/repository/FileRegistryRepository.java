@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface FileRegistryRepository extends CassandraRepository<FileRegistryEntity, FileRegistryKey> {
+    FileRegistryEntity findByKey(FileRegistryKey fileRegistryKey);
 }

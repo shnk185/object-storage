@@ -11,4 +11,6 @@ import org.springframework.stereotype.Repository;
 public interface FileListingRepository extends CassandraRepository<FileListingEntity, FileListingKey> {
     Slice<FileListingEntity> findByKeyUserNameAndKeyBucketNameAndKeyDeletedAndKeyFileNameStartingWith(
             String userName, String bucketName, boolean deleted, String prefix, Pageable pageable);
+
+    FileListingEntity findByKey(FileListingKey fileListingKey);
 }

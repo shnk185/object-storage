@@ -17,6 +17,4 @@ public class FileRegistryKey {
 
     @PrimaryKeyColumn(name = "file_uuid", ordinal = 0, type = PrimaryKeyType.PARTITIONED)
     private UUID fileUUID;
-
-
 }

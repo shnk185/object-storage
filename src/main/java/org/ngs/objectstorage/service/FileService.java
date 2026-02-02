@@ -27,9 +27,6 @@ public class FileService {
     private FileRepository fileRepository;
 
     @Autowired
-    private FileListingRepository fileListingRepository;
-
-    @Autowired
     private PreSignedRepository preSignedRepository;
 
     public FileCreationDto createFiles(String bucketName, FileCreationDto fileCreationDto) {
@@ -54,6 +51,7 @@ public class FileService {
             fileEntity.setCreatedAt(now);
             fileEntity.setStatus(UploadStatus.CREATED.name());
             fileEntity.setFileUUID(fileRegistryEntity.getKey().getFileUUID());
+            fileEntity.setMd5Hash(fileDto.getMd5Hash());
             fileRepository.save(fileEntity);
 
             responseFileDtos.add(FileDto.builder()
@@ -62,16 +60,6 @@ public class FileService {
                     .createdAt(fileEntity.getCreatedAt())
                     .status(fileEntity.getStatus())
                     .build());
-
-            FileListingEntity fileListingEntity = new FileListingEntity();
-            FileListingKey fileListingKey = new FileListingKey();
-            fileListingKey.setUserName(fileCreationDto.getUserName());
-            fileListingKey.setBucketName(bucketName);
-            fileListingKey.setDeleted(false);
-            fileListingKey.setFileName(fileDto.getFileName());
-            fileListingEntity.setKey(fileListingKey);
-            fileListingEntity.setCreatedAt(now);
-            fileListingRepository.save(fileListingEntity);
         }
 
         return FileCreationDto.builder()

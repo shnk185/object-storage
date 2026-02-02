@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PreSignedRepository extends CassandraRepository<PreSignedEntity, PreSignedKey> {
+    PreSignedEntity findByKey(String presignedId);
 }
