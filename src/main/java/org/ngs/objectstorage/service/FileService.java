@@ -59,6 +59,8 @@ public class FileService {
                     .fileSize(fileEntity.getFileSize())
                     .createdAt(fileEntity.getCreatedAt())
                     .status(fileEntity.getStatus())
+                    .md5Hash(fileEntity.getMd5Hash())
+                    .deleted(false)
                     .build());
         }
 
@@ -75,7 +77,7 @@ public class FileService {
         preSignedEntity.setOperation(preSignedDto.getOperation());
         preSignedEntity.setBucketName(bucketName);
         preSignedEntity.setFileName(fileName);
-        preSignedEntity.setUserName(preSignedEntity.getUserName());
+        preSignedEntity.setUserName(preSignedDto.getUserName());
         preSignedEntity.setKey(new PreSignedKey(UUID.randomUUID()));
         preSignedEntity.setCreatedAt(now);
         preSignedEntity.setExpiresAt(expire);
@@ -99,7 +101,8 @@ public class FileService {
         fileKey.setUserName(userName);
         fileKey.setBucketName(bucketName);
 
-        FileEntity fileEntity = fileRepository.findByKey(fileKey);
+        FileEntity fileEntity = fileRepository.findById(fileKey)
+                .orElseThrow(() -> new RuntimeException("invalid fileEntity"));;
 
         return FileDto.builder()
                 .fileName(fileEntity.getKey().getFileName())

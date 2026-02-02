@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -48,7 +49,9 @@ public class PreSignedService {
     }
 
     public FileDto persistFile(String presignedId, HttpServletRequest httpServletRequest) throws IOException {
-        PreSignedEntity preSignedEntity = preSignedRepository.findByKey(presignedId);
+        PreSignedKey preSignedKey = new PreSignedKey(UUID.fromString(presignedId));
+        PreSignedEntity preSignedEntity = preSignedRepository.findById(preSignedKey)
+                .orElseThrow(() -> new RuntimeException("invalid presigned"));
         validateRequest(preSignedEntity, PreSignedOperation.UPLOAD);
 
         FileKey fileKey = FileKey.builder()
@@ -57,7 +60,8 @@ public class PreSignedService {
                 .userName(preSignedEntity.getUserName())
                 .deleted(false)
                 .build();
-        FileEntity fileEntity = fileRepository.findByKey(fileKey);
+        FileEntity fileEntity = fileRepository.findById(fileKey)
+                .orElseThrow(() -> new RuntimeException("invalid fileEntity"));
 
         diskService.persistToDisk(fileEntity.getFileUUID().toString(), fileEntity.getMd5Hash(),
                 fileEntity.getFileSize(), httpServletRequest.getInputStream());
@@ -65,7 +69,8 @@ public class PreSignedService {
         fileEntity.setStatus(UploadStatus.UPLOADED.name());
         fileRepository.save(fileEntity);
 
-        FileRegistryEntity fileRegistryEntity = fileRegistryRepository.findByKey(new FileRegistryKey(fileEntity.getFileUUID()));
+        FileRegistryEntity fileRegistryEntity = fileRegistryRepository.findById(new FileRegistryKey(fileEntity.getFileUUID()))
+                .orElseThrow(() -> new RuntimeException("invalid fileRegistryEntity"));
         fileRegistryEntity.setFileSize(fileEntity.getFileSize());
         fileRegistryEntity.setMd5Hash(fileEntity.getMd5Hash());
         fileRegistryRepository.save(fileRegistryEntity);
@@ -87,12 +92,15 @@ public class PreSignedService {
                 .status(fileEntity.getStatus())
                 .createdAt(fileListingEntity.getCreatedAt())
                 .md5Hash(fileEntity.getMd5Hash())
+                .deleted(fileKey.isDeleted())
                 .build();
     }
 
 
     public void fetchFile(String presignedId, HttpServletResponse httpServletResponse) throws IOException {
-        PreSignedEntity preSignedEntity = preSignedRepository.findByKey(presignedId);
+        PreSignedKey preSignedKey = new PreSignedKey(UUID.fromString(presignedId));
+        PreSignedEntity preSignedEntity = preSignedRepository.findById(preSignedKey)
+                .orElseThrow(() -> new RuntimeException("invalid presigned"));
         validateRequest(preSignedEntity, PreSignedOperation.DOWNLOAD);
 
         FileKey fileKey = FileKey.builder()
@@ -101,7 +109,8 @@ public class PreSignedService {
                 .userName(preSignedEntity.getUserName())
                 .deleted(false)
                 .build();
-        FileEntity fileEntity = fileRepository.findByKey(fileKey);
+        FileEntity fileEntity = fileRepository.findById(fileKey)
+                .orElseThrow(() -> new RuntimeException("invalid fileEntity"));
 
         httpServletResponse.setStatus(HttpServletResponse.SC_OK);
         httpServletResponse.setContentType("application/octet-stream");
@@ -112,7 +121,9 @@ public class PreSignedService {
     }
 
     public FileDto deleteFile(String presignedId) {
-        PreSignedEntity preSignedEntity = preSignedRepository.findByKey(presignedId);
+        PreSignedKey preSignedKey = new PreSignedKey(UUID.fromString(presignedId));
+        PreSignedEntity preSignedEntity = preSignedRepository.findById(preSignedKey)
+                .orElseThrow(() -> new RuntimeException("invalid presigned"));
         validateRequest(preSignedEntity, PreSignedOperation.DELETE);
 
         FileKey fileKey = FileKey.builder()
@@ -121,7 +132,8 @@ public class PreSignedService {
                 .userName(preSignedEntity.getUserName())
                 .deleted(false)
                 .build();
-        FileEntity fileEntity = fileRepository.findByKey(fileKey);
+        FileEntity fileEntity = fileRepository.findById(fileKey)
+                .orElseThrow(() -> new RuntimeException("invalid fileEntity"));
 
         boolean deleted = diskService.deleteFile(fileEntity.getFileUUID().toString());
         if (!deleted) {
@@ -139,14 +151,16 @@ public class PreSignedService {
                 .userName(fileKey.getUserName())
                 .fileName(fileKey.getFileName())
                 .build();
-        FileListingEntity fileListingEntity = fileListingRepository.findByKey(fileListingKey);
+        FileListingEntity fileListingEntity = fileListingRepository.findById(fileListingKey)
+                .orElseThrow(() -> new RuntimeException("invalid fileListingEntity"));
         fileListingRepository.deleteById(fileListingKey);
         fileListingKey.setDeleted(true);
         fileListingEntity.setKey(fileListingKey);
         fileListingRepository.save(fileListingEntity);
 
         FileRegistryKey fileRegistryKey = new FileRegistryKey(fileEntity.getFileUUID());
-        FileRegistryEntity fileRegistryEntity = fileRegistryRepository.findByKey(fileRegistryKey);
+        FileRegistryEntity fileRegistryEntity = fileRegistryRepository.findById(fileRegistryKey)
+                .orElseThrow(() -> new RuntimeException("invalid fileRegistryEntity"));
         fileRegistryEntity.setOrphan(true);
         fileRegistryRepository.save(fileRegistryEntity);
 

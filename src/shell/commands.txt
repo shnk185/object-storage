@@ -1,0 +1,5 @@
+# get file size
+stat -f%z filename
+
+# md5 hash
+md5 filename

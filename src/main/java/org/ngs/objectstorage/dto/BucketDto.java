@@ -14,6 +14,6 @@ import java.time.Instant;
 public class BucketDto {
     private String bucketName;
     private String userName;
-    private boolean deleted;
+    private Boolean deleted;
     private Instant createdAt;
 }

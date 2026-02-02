@@ -17,5 +17,5 @@ public class FileDto {
     private Instant createdAt;
     private String status;
     private String md5Hash;
-    private boolean deleted;
+    private Boolean deleted;
 }
