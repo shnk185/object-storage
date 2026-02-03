@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -29,9 +30,13 @@ public class FileService {
     @Autowired
     private PreSignedRepository preSignedRepository;
 
+    @Autowired
+    private FileListingRepository fileListingRepository;
+
     public FileCreationDto createFiles(String bucketName, FileCreationDto fileCreationDto) {
         Instant now = Instant.now();
         List<FileDto> responseFileDtos = new ArrayList<>();
+        checkAndInvalidate(bucketName, fileCreationDto);
         for (FileDto fileDto: fileCreationDto.getFileDtos()) {
             FileRegistryEntity fileRegistryEntity = new FileRegistryEntity();
             FileRegistryKey fileRegistryKey = new FileRegistryKey();
@@ -68,6 +73,37 @@ public class FileService {
                 .fileDtos(responseFileDtos)
                 .userName(fileCreationDto.getUserName())
                 .build();
+    }
+
+    private void checkAndInvalidate(String bucketName, FileCreationDto fileCreationDto) {
+        for (FileDto fileDto: fileCreationDto.getFileDtos()) {
+            FileKey fileKey = new FileKey();
+            fileKey.setUserName(fileCreationDto.getUserName());
+            fileKey.setBucketName(bucketName);
+            fileKey.setFileName(fileDto.getFileName());
+            Optional<FileEntity> fileEntityOptional = fileRepository.findById(fileKey);
+            if (fileEntityOptional.isEmpty()) return;
+            FileEntity fileEntity = fileEntityOptional.get();
+
+            FileRegistryKey fileRegistryKey = new FileRegistryKey(fileEntity.getFileUUID());
+            FileRegistryEntity fileRegistryEntity = fileRegistryRepository.findById(fileRegistryKey)
+                    .orElseThrow(() -> new RuntimeException("invalid fileRegistryEntity"));
+            fileRegistryEntity.setOrphan(true);
+            fileRegistryRepository.save(fileRegistryEntity);
+
+            FileListingKey fileListingKey = FileListingKey.builder()
+                    .deleted(false)
+                    .bucketName(fileKey.getBucketName())
+                    .userName(fileKey.getUserName())
+                    .fileName(fileKey.getFileName())
+                    .build();
+            FileListingEntity fileListingEntity = fileListingRepository.findById(fileListingKey)
+                    .orElseThrow(() -> new RuntimeException("invalid fileListingEntity"));
+            fileListingRepository.deleteById(fileListingKey);
+            fileListingKey.setDeleted(true);
+            fileListingEntity.setKey(fileListingKey);
+            fileListingRepository.save(fileListingEntity);
+        }
     }
 
     public PreSignedDto createPreSignedOperation(String bucketName, String fileName, PreSignedDto preSignedDto) {
