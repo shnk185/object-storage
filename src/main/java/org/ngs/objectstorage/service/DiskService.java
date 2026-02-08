@@ -29,7 +29,7 @@ public class DiskService {
         try {
             md5 = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("md4 not found");
+            throw new RuntimeException("md5 not found");
         }
         return md5;
     }
