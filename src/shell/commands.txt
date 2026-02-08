@@ -3,3 +3,13 @@ stat -f%z filename
 
 # md5 hash
 md5 filename
+
+# go in the cassandra container
+docker exec -it cassandra1-object-store cqlsh
+
+# create keyspace
+CREATE KEYSPACE IF NOT EXISTS object_storage
+WITH replication = {
+  'class': 'NetworkTopologyStrategy',
+  'dc1': 1
+};
