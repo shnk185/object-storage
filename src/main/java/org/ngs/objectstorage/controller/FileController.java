@@ -38,9 +38,10 @@ public class FileController {
     @GetMapping("/{fileName}")
     public ResponseEntity<FileDto> getFileInfo(@PathVariable String bucketName,
                                                @PathVariable String fileName,
-                                               @RequestParam String userName) {
+                                               @RequestParam String userName,
+                                               @RequestParam(required = false) Boolean deleted) {
         log.info("received presigned file info request bucket {} fileName {} userName {}", bucketName, fileName, userName);
-        FileDto response = fileService.fetchFileInfo(bucketName, fileName, userName);
+        FileDto response = fileService.fetchFileInfo(bucketName, fileName, userName, deleted);
         return ResponseEntity.ok(response);
     }
 }

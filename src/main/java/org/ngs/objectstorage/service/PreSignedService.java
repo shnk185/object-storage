@@ -143,6 +143,7 @@ public class PreSignedService {
         fileRepository.deleteById(fileKey);
         fileKey.setDeleted(true);
         fileEntity.setKey(fileKey);
+        fileEntity.setStatus(UploadStatus.DELETED.name());
         fileRepository.save(fileEntity);
 
         FileListingKey fileListingKey = FileListingKey.builder()

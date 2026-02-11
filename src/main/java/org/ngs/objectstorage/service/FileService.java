@@ -130,9 +130,13 @@ public class FileService {
                 .build();
     }
 
-    public FileDto fetchFileInfo(String bucketName, String fileName, String userName) {
+    public FileDto fetchFileInfo(String bucketName, String fileName, String userName, Boolean deleted) {
         FileKey fileKey = new FileKey();
-        fileKey.setDeleted(false);
+        if (deleted == null) {
+            fileKey.setDeleted(false);
+        } else {
+            fileKey.setDeleted(deleted);
+        }
         fileKey.setFileName(fileName);
         fileKey.setUserName(userName);
         fileKey.setBucketName(bucketName);

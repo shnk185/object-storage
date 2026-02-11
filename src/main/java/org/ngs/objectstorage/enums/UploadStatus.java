@@ -4,5 +4,7 @@ public enum UploadStatus {
     CREATED,
     IN_PROGRESS,
     UPLOADED,
-    FAILED
+    FAILED,
+    DELETE_IN_PROGRESS,
+    DELETED;
 }
