@@ -62,6 +62,7 @@ public class PreSignedService {
                 .build();
         FileEntity fileEntity = fileRepository.findById(fileKey)
                 .orElseThrow(() -> new RuntimeException("invalid fileEntity"));
+        log.info("file entity {}", fileEntity);
 
         diskService.persistToDisk(fileEntity.getFileUUID().toString(), fileEntity.getMd5Hash(),
                 fileEntity.getFileSize(), httpServletRequest.getInputStream());
